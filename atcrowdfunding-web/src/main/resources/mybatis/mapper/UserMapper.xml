@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atcrowdfunding.dao.UserDao">
+	<resultMap type="User" id="UserMap">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="username" property="username"
+			jdbcType="VARCHAR" />
+		<result column="loginacct" property="loginacct"
+			jdbcType="VARCHAR" />
+		<result column="password" property="password"
+			jdbcType="VARCHAR" />
+		<result column="email" property="email" jdbcType="VARCHAR" />
+		<result column="createtime" property="createtime"
+			jdbcType="VARCHAR" />
+	</resultMap>
+	<!-- 更新数据库记录 -->
+	<!-- 插入用户 -->
+	<insert id="insertUser" parameterType="User">
+		insert into t_user (
+		loginacct,username,password,email,createtime
+		) values (
+		#{loginacct},#{username},#{password},#{email},#{createtime}
+		)
+	</insert>
+	<!-- 增加关系性数据 -->
+	<insert id="insertUserRoles" parameterType="java.util.Map">
+		insert into t_user_role(userid,roleid) values
+		<foreach collection="roleids" item="roleid" separator=",">
+			(#{userid},#{roleid})
+		</foreach>
+	</insert>
+	<!-- 查询t_user表 -->
+	<select id="queryAll" resultMap="UserMap">
+		select * from t_user
+	</select>
+	<!-- 登陆查询 -->
+	<select id="queryLogin" parameterType="User" resultMap="UserMap">
+		select *
+		from t_user where loginacct = #{loginacct} and password = #{password}
+	</select>
+	<!-- 分页查询语句 -->
+	<select id="pageQueryData" resultMap="UserMap">
+		select * from t_user
+		<where>
+			<if test="queryText != null">
+				and loginacct like concat('%',#{queryText},'%')
+			</if>
+		</where>
+		order by createtime desc
+		limit #{start}, #{size}
+	</select>
+	<!-- 查询记录总条数 -->
+	<select id="pageQueryCount" resultType="int">
+		select count(*) from t_user
+		<where>
+			<if test="queryText != null">
+				and loginacct like concat('%',#{queryText},'%')
+			</if>
+		</where>
+	</select>
+	<!-- 根据Id查询对象 -->
+	<select id="queryById" resultType="User" parameterType="int">
+		select *
+		from t_user where id=#{id}
+	</select>
+	<select id="queryRoleidsByUserid"
+		parameterType="java.lang.Integer" resultType="java.util.List">
+		select roleid from
+		t_user_role where userid=#{userid}
+	</select>
+	<update id="updateUser" parameterType="User">
+		update t_user set
+		loginacct=#{loginacct},username=#{username},email=#{email}
+		where
+		id=#{id}
+	</update>
+	<!-- 删除单条用户数据 -->
+	<delete id="deleteUser" parameterType="int">
+		delete from t_user where
+		id=#{id}
+	</delete>
+	<!-- 批量删除Users -->
+	<delete id="deleteUsers" parameterType="java.util.Map">
+		delete from t_user where id in
+		<foreach collection="userids" item="userid" open="(" close=")"
+			separator=",">
+			#{userid}
+		</foreach>
+	</delete>
+	<!-- 删除关系型数据 -->
+	<delete id="deleteUserRoles" parameterType="java.util.Map">
+		delete from t_user_role where userid=#{userid} and roleid in
+		<foreach collection="roleids" item="roleid" open="(" close=")"
+			separator=",">
+			#{roleid}
+		</foreach>
+	</delete>
+</mapper>
